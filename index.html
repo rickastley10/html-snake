@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Snake</title>
+<style>
+    body {
+        margin: 0;
+        background: #111;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        touch-action: none;
+    }
+    canvas {
+        background: #000;
+        border: 2px solid #0f0;
+        image-rendering: pixelated;
+    }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const tileSize = 20;
+const tiles = 20;
+canvas.width = canvas.height = tileSize * tiles;
+
+let snake, dir, food, gameOver;
+
+function reset() {
+    snake = [{x: 10, y: 10}];
+    dir = {x: 1, y: 0};
+    food = randomFood();
+    gameOver = false;
+}
+
+function randomFood() {
+    return {
+        x: Math.floor(Math.random() * tiles),
+        y: Math.floor(Math.random() * tiles)
+    };
+}
+
+function update() {
+    if (gameOver) return;
+
+    const head = {
+        x: snake[0].x + dir.x,
+        y: snake[0].y + dir.y
+    };
+
+    if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= tiles || head.y >= tiles ||
+        snake.some(s => s.x === head.x && s.y === head.y)
+    ) {
+        gameOver = true;
+        return;
+    }
+
+    snake.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+        food = randomFood();
+    } else {
+        snake.pop();
+    }
+}
+
+function draw() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#0f0";
+    for (const s of snake) {
+        ctx.fillRect(s.x * tileSize, s.y * tileSize, tileSize, tileSize);
+    }
+
+    ctx.fillStyle = "#f00";
+    ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+
+    if (gameOver) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "20px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+        ctx.fillText("Tap to Restart", canvas.width / 2, canvas.height / 2 + 30);
+    }
+}
+
+setInterval(() => {
+    update();
+    draw();
+}, 120);
+
+/* Keyboard controls */
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp" && dir.y === 0) dir = {x: 0, y: -1};
+    if (e.key === "ArrowDown" && dir.y === 0) dir = {x: 0, y: 1};
+    if (e.key === "ArrowLeft" && dir.x === 0) dir = {x: -1, y: 0};
+    if (e.key === "ArrowRight" && dir.x === 0) dir = {x: 1, y: 0};
+});
+
+/* Touch controls (swipe) */
+let startX = 0, startY = 0;
+
+canvas.addEventListener("touchstart", e => {
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+});
+
+canvas.addEventListener("touchend", e => {
+    if (gameOver) {
+        reset();
+        return;
+    }
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && dir.x === 0) dir = {x: 1, y: 0};
+        if (dx < 0 && dir.x === 0) dir = {x: -1, y: 0};
+    } else {
+        if (dy > 0 && dir.y === 0) dir = {x: 0, y: 1};
+        if (dy < 0 && dir.y === 0) dir = {x: 0, y: -1};
+    }
+});
+
+canvas.addEventListener("click", () => {
+    if (gameOver) reset();
+});
+
+reset();
+</script>
+
+</body>
+</html>
