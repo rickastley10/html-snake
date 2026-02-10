@@ -1,236 +1,215 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Snake</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 10px;
-            background: #000;
-            color: #0f0;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        canvas {
-            border: 2px solid #0f0;
-            background: #000;
-            display: block;
-            margin: 10px auto;
-        }
-        .score {
-            font-size: 22px;
-            margin: 5px;
-        }
-        .btn {
-            background: #000;
-            color: #0f0;
-            border: 1px solid #0f0;
-            padding: 8px 16px;
-            margin: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .controls {
-            margin-top: 10px;
-        }
-        .dir-btn {
-            width: 60px;
-            height: 60px;
-            font-size: 22px;
-            margin: 3px;
-        }
-    </style>
+<meta charset="utf-8">
+<title>Snake</title>
+<style>
+    body {
+        margin: 0;
+        background: black;
+        color: white;
+        font-family: Arial;
+        text-align: center;
+    }
+    canvas {
+        display: block;
+        margin: 10px auto;
+        background: black;
+        border: 2px solid #0f0;
+    }
+</style>
 </head>
 <body>
 
-<div class="score">SCORE: <span id="score">0</span></div>
-
-<canvas id="game" width="450" height="450"></canvas>
-
-<div>
-    <button class="btn" onclick="startGame()">START</button>
-    <button class="btn" onclick="togglePause()">PAUSE</button>
-</div>
-
-<div class="controls">
-    <div>
-        <button class="btn dir-btn" onclick="changeDir(0,-1)">↑</button>
-    </div>
-    <div>
-        <button class="btn dir-btn" onclick="changeDir(-1,0)">←</button>
-        <button class="btn dir-btn" onclick="changeDir(0,1)">↓</button>
-        <button class="btn dir-btn" onclick="changeDir(1,0)">→</button>
-    </div>
-</div>
-
-<div style="font-size:12px;color:#888;margin-top:8px">
-    Arrows / WASD / Buttons
-</div>
+<canvas id="game" width="400" height="400"></canvas>
 
 <script>
-/* ===== BASIC SETUP ===== */
+/* ===== CONFIG ===== */
+var TILE = 20;
+var SIZE = 400;
+var HALF = SIZE / 2;
+var SPEED = 120;
+
+/* ===== CANVAS ===== */
 var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
 
-var grid = 22.5;
-var cells = canvas.width / grid;
+/* ===== GAME STATE ===== */
+var px = 0, py = 0;
+var facing = "up";
+var nextFacing = "up";
+var canTurn = true;
 
-var snake;
-var dir;
-var food;
-var score;
-var running = false;
-var paused = false;
-var loop;
+var segments = [];
+var startLen = 4;
 
-/* ===== DRAW ===== */
-function draw() {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+var bx = randPos();
+var by = randPos();
 
-    // Snake
-    ctx.fillStyle = "#0f0";
-    for (var i = 0; i < snake.length; i++) {
-        ctx.fillRect(
-            snake[i].x * grid,
-            snake[i].y * grid,
-            grid - 1,
-            grid - 1
-        );
-    }
+var score = 0;
+var highscore = 0;
+var menu = 1;
+var loop = null;
 
-    // Food
-    ctx.fillStyle = "#f00";
+/* ===== HELPERS ===== */
+function randPos() {
+    return (Math.floor(Math.random() * 19) - 9) * TILE;
+}
+
+function drawRect(x, y, color) {
+    ctx.fillStyle = color;
     ctx.fillRect(
-        food.x * grid,
-        food.y * grid,
-        grid - 1,
-        grid - 1
+        x + HALF,
+        HALF - y - TILE,
+        TILE,
+        TILE
     );
 }
 
-/* ===== UPDATE ===== */
-function update() {
-    if (!running || paused) return;
-    if (dir.x === 0 && dir.y === 0) return;
+/* ===== RESET ===== */
+function resetGame() {
+    px = 0;
+    py = 0;
+    facing = "up";
+    nextFacing = "up";
+    score = 0;
+    segments = [];
 
-    var head = {
-        x: snake[0].x + dir.x,
-        y: snake[0].y + dir.y
-    };
-
-    // Wrap
-    if (head.x < 0) head.x = cells - 1;
-    if (head.x >= cells) head.x = 0;
-    if (head.y < 0) head.y = cells - 1;
-    if (head.y >= cells) head.y = 0;
-
-    snake.unshift(head);
-
-    // Food
-    if (head.x === food.x && head.y === food.y) {
-        score += 10;
-        document.getElementById("score").innerHTML = score;
-        newFood();
-    } else {
-        snake.pop();
+    for (var i = 0; i < startLen; i++) {
+        segments.push({ x: 0, y: 0 });
     }
 
-    // Self collision
-    for (var i = 4; i < snake.length; i++) {
-        if (head.x === snake[i].x && head.y === snake[i].y) {
-            gameOver();
-            return;
-        }
-    }
-
-    draw();
+    bx = randPos();
+    by = randPos();
 }
 
-/* ===== FOOD ===== */
-function newFood() {
-    food = {
-        x: Math.floor(Math.random() * cells),
-        y: Math.floor(Math.random() * cells)
-    };
+/* ===== DRAW ===== */
+function drawSnake() {
+    drawRect(px, py, "green");
+    for (var i = 0; i < segments.length; i++) {
+        drawRect(segments[i].x, segments[i].y, "#006600");
+    }
+}
+
+function drawBerry() {
+    drawRect(bx, by, "red");
+}
+
+function drawUI() {
+    ctx.fillStyle = "white";
+    ctx.font = "14px Arial";
+    ctx.fillText("Score: " + score, 8, 18);
+    ctx.fillText("High: " + highscore, 8, 34);
+
+    ctx.strokeStyle = "#0f0";
+    ctx.strokeRect(0, 0, SIZE, SIZE);
+}
+
+function drawMenu() {
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    ctx.fillStyle = "red";
+    ctx.font = "18px Arial";
+    ctx.fillText("Snake", 170, 180);
+    ctx.font = "14px Arial";
+    ctx.fillText("Press SPACE or click", 120, 210);
+}
+
+/* ===== GAME LOGIC ===== */
+function moveSnake() {
+    canTurn = true;
+    facing = nextFacing;
+
+    segments.unshift({ x: px, y: py });
+
+    if (facing === "up") py += TILE;
+    if (facing === "down") py -= TILE;
+    if (facing === "left") px -= TILE;
+    if (facing === "right") px += TILE;
+
+    if (px === bx && py === by) {
+        score++;
+        if (score > highscore) highscore = score;
+        bx = randPos();
+        by = randPos();
+    } else {
+        segments.pop();
+    }
+
+    for (var i = 0; i < segments.length; i++) {
+        if (px === segments[i].x && py === segments[i].y) gameOver();
+    }
+
+    if (px >= 200 || px <= -200 || py >= 200 || py <= -200) gameOver();
+}
+
+function gameOver() {
+    clearInterval(loop);
+    menu = 1;
+    drawMenu();
+}
+
+/* ===== LOOP ===== */
+function tick() {
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    moveSnake();
+    drawBerry();
+    drawSnake();
+    drawUI();
+}
+
+/* ===== CONTROLS ===== */
+function setDir(dir, opposite) {
+    if (canTurn && facing !== opposite) {
+        nextFacing = dir;
+        canTurn = false;
+    }
+}
+
+document.addEventListener("keydown", function (e) {
+    var k = e.key.toLowerCase();
+
+    if (menu && k === " ") startGame();
+
+    if (k === "arrowup" || k === "w") setDir("up", "down");
+    if (k === "arrowdown" || k === "s") setDir("down", "up");
+    if (k === "arrowleft" || k === "a") setDir("left", "right");
+    if (k === "arrowright" || k === "d") setDir("right", "left");
+
+    if (k === "q") rotateLeft();
+    if (k === "e") rotateRight();
+});
+
+canvas.addEventListener("click", function (e) {
+    if (menu) {
+        startGame();
+        return;
+    }
+    if (e.offsetX < SIZE / 2) rotateLeft();
+    else rotateRight();
+});
+
+function rotateLeft() {
+    if (!canTurn) return;
+    var map = { up: "left", left: "down", down: "right", right: "up" };
+    nextFacing = map[facing];
+    canTurn = false;
+}
+
+function rotateRight() {
+    if (!canTurn) return;
+    var map = { up: "right", right: "down", down: "left", left: "up" };
+    nextFacing = map[facing];
+    canTurn = false;
 }
 
 /* ===== START ===== */
 function startGame() {
-    snake = [
-        { x: Math.floor(cells / 2), y: Math.floor(cells / 2) }
-    ];
-    dir = { x: 0, y: 0 };
-    score = 0;
-    paused = false;
-    running = true;
-
-    document.getElementById("score").innerHTML = score;
-
-    newFood();
-    clearInterval(loop);
-    loop = setInterval(update, 150);
-
-    draw();
+    resetGame();
+    menu = 0;
+    loop = setInterval(tick, SPEED);
 }
 
-/* ===== PAUSE ===== */
-function togglePause() {
-    if (!running) return;
-    paused = !paused;
-
-    if (paused) {
-        ctx.fillStyle = "#ff0";
-        ctx.font = "24px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
-    }
-}
-
-/* ===== GAME OVER ===== */
-function gameOver() {
-    running = false;
-    clearInterval(loop);
-
-    ctx.fillStyle = "#f00";
-    ctx.font = "26px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
-    ctx.fillStyle = "#0f0";
-    ctx.font = "16px Arial";
-    ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 10);
-}
-
-/* ===== DIRECTION ===== */
-function changeDir(x, y) {
-    if (dir.x !== 0 && x !== 0) return;
-    if (dir.y !== 0 && y !== 0) return;
-    dir = { x: x, y: y };
-}
-
-/* ===== KEYBOARD ===== */
-document.onkeydown = function(e) {
-    e = e || window.event;
-
-    if ([37,38,39,40,65,68,83,87,32].indexOf(e.keyCode) !== -1) {
-        e.preventDefault();
-    }
-
-    if (e.keyCode === 37 || e.keyCode === 65) changeDir(-1, 0);
-    if (e.keyCode === 38 || e.keyCode === 87) changeDir(0, -1);
-    if (e.keyCode === 39 || e.keyCode === 68) changeDir(1, 0);
-    if (e.keyCode === 40 || e.keyCode === 83) changeDir(0, 1);
-    if (e.keyCode === 32) togglePause();
-};
-
-/* ===== INTRO ===== */
-draw();
-ctx.fillStyle = "#0f0";
-ctx.font = "26px Arial";
-ctx.textAlign = "center";
-ctx.fillText("SNAKE", canvas.width / 2, canvas.height / 2 - 20);
-ctx.font = "14px Arial";
-ctx.fillText("Press START", canvas.width / 2, canvas.height / 2 + 10);
+drawMenu();
 </script>
 
 </body>
