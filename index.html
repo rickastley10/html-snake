@@ -1,216 +1,379 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Snake</title>
+<meta charset="UTF-8">
+<title>meteor</title>
 <style>
     body {
         margin: 0;
-        background: black;
-        color: white;
-        font-family: Arial;
-        text-align: center;
+        background: #111;
+        overflow: hidden;
     }
     canvas {
         display: block;
-        margin: 10px auto;
+        margin: auto;
         background: black;
-        border: 2px solid #0f0;
+        touch-action: none; /* important for mobile touch */
     }
 </style>
 </head>
 <body>
 
-<canvas id="game" width="400" height="400"></canvas>
+<canvas id="game"></canvas>
 
 <script>
-/* ===== CONFIG ===== */
-var TILE = 20;
-var SIZE = 400;
-var HALF = SIZE / 2;
-var SPEED = 120;
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const WINDOW_WIDTH = 800;
+const WINDOW_HEIGHT = 800;
+const w = 40;
+const h = 40;
+/* ============================================================
+   GLOBALS
+   ============================================================ */
+const canvas = document.getElementById("game");
+canvas.width = WINDOW_WIDTH;
+canvas.height = WINDOW_HEIGHT;
 
-/* ===== CANVAS ===== */
-var canvas = document.getElementById("game");
-var ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d");
 
-/* ===== GAME STATE ===== */
-var px = 0, py = 0;
-var facing = "up";
-var nextFacing = "up";
-var canTurn = true;
+let running = true;
 
-var segments = [];
-var startLen = 4;
+/* ============================================================
+   INPUT
+   ============================================================ */
+const keys = {};
 
-var bx = randPos();
-var by = randPos();
+window.addEventListener("keydown", (e) => {
+    keys[e.key] = true;
+});
 
-var score = 0;
-var highscore = 0;
-var menu = 1;
-var loop = null;
+window.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
+});
 
-/* ===== HELPERS ===== */
-function randPos() {
-    return (Math.floor(Math.random() * 19) - 9) * TILE;
-}
-
-function drawRect(x, y, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(
-        x + HALF,
-        HALF - y - TILE,
-        TILE,
-        TILE
-    );
-}
-
-/* ===== RESET ===== */
-function resetGame() {
-    px = 0;
-    py = 0;
-    facing = "up";
-    nextFacing = "up";
-    score = 0;
-    segments = [];
-
-    for (var i = 0; i < startLen; i++) {
-        segments.push({ x: 0, y: 0 });
-    }
-
-    bx = randPos();
-    by = randPos();
-}
-
-/* ===== DRAW ===== */
-function drawSnake() {
-    drawRect(px, py, "green");
-    for (var i = 0; i < segments.length; i++) {
-        drawRect(segments[i].x, segments[i].y, "#006600");
-    }
-}
-
-function drawBerry() {
-    drawRect(bx, by, "red");
-}
-
-function drawUI() {
-    ctx.fillStyle = "white";
-    ctx.font = "14px Arial";
-    ctx.fillText("Score: " + score, 8, 18);
-    ctx.fillText("High: " + highscore, 8, 34);
-
-    ctx.strokeStyle = "#0f0";
-    ctx.strokeRect(0, 0, SIZE, SIZE);
-}
-
-function drawMenu() {
-    ctx.clearRect(0, 0, SIZE, SIZE);
-    ctx.fillStyle = "red";
-    ctx.font = "18px Arial";
-    ctx.fillText("Snake", 170, 180);
-    ctx.font = "14px Arial";
-    ctx.fillText("Press SPACE or click", 120, 210);
-}
-
-/* ===== GAME LOGIC ===== */
-function moveSnake() {
-    canTurn = true;
-    facing = nextFacing;
-
-    segments.unshift({ x: px, y: py });
-
-    if (facing === "up") py += TILE;
-    if (facing === "down") py -= TILE;
-    if (facing === "left") px -= TILE;
-    if (facing === "right") px += TILE;
-
-    if (px === bx && py === by) {
-        score++;
-        if (score > highscore) highscore = score;
-        bx = randPos();
-        by = randPos();
+/* ============================================================
+   SIMPLE TOUCH CONTROLS
+   ============================================================ */
+/* ============================================================
+   UNIVERSAL INPUT (Single handler for Mouse + Touch)
+   ============================================================ */
+function handleInput(e) {
+    e.preventDefault();
+    
+    // Get the coordinates from either touch or mouse event
+    let clientX;
+    if (e.touches) {
+        // Touch event
+        clientX = e.touches[0].clientX;
     } else {
-        segments.pop();
+        // Mouse event
+        clientX = e.clientX;
     }
-
-    for (var i = 0; i < segments.length; i++) {
-        if (px === segments[i].x && py === segments[i].y) gameOver();
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    
+    // Left half
+    if (x < WINDOW_WIDTH / 2) {
+        if(dir==="up"){dir="left"}
+        else if(dir==="left"){dir="down"}
+        else if(dir==="down"){dir="right"}
+        else if(dir==="right"){dir="up"}
     }
-
-    if (px >= 200 || px <= -200 || py >= 200 || py <= -200) gameOver();
-}
-
-function gameOver() {
-    clearInterval(loop);
-    menu = 1;
-    drawMenu();
-}
-
-/* ===== LOOP ===== */
-function tick() {
-    ctx.clearRect(0, 0, SIZE, SIZE);
-    moveSnake();
-    drawBerry();
-    drawSnake();
-    drawUI();
-}
-
-/* ===== CONTROLS ===== */
-function setDir(dir, opposite) {
-    if (canTurn && facing !== opposite) {
-        nextFacing = dir;
-        canTurn = false;
+    // Right half
+    else {
+        if(dir==="up"){dir="right"}
+        else if(dir==="right"){dir="down"}
+        else if(dir==="down"){dir="left"}
+        else if(dir==="left"){dir="up"}
     }
 }
 
-document.addEventListener("keydown", function (e) {
-    var k = e.key.toLowerCase();
+// Add both event listeners to the same function
+canvas.addEventListener("touchstart", handleInput);
+canvas.addEventListener("mousedown", handleInput);
 
-    if (menu && k === " ") startGame();
+/* ============================================================
+   RENDERER
+   ============================================================ */
 
-    if (k === "arrowup" || k === "w") setDir("up", "down");
-    if (k === "arrowdown" || k === "s") setDir("down", "up");
-    if (k === "arrowleft" || k === "a") setDir("left", "right");
-    if (k === "arrowright" || k === "d") setDir("right", "left");
 
-    if (k === "q") rotateLeft();
-    if (k === "e") rotateRight();
-});
+/* ============================================================
+   GAME STATE
+   ============================================================ */
 
-canvas.addEventListener("click", function (e) {
-    if (menu) {
-        startGame();
-        return;
-    }
-    if (e.offsetX < SIZE / 2) rotateLeft();
-    else rotateRight();
-});
 
-function rotateLeft() {
-    if (!canTurn) return;
-    var map = { up: "left", left: "down", down: "right", right: "up" };
-    nextFacing = map[facing];
-    canTurn = false;
+let px=WINDOW_WIDTH/2; let py=WINDOW_HEIGHT/2;
+let bx=Math.floor(Math.random()*(WINDOW_WIDTH/20-1)+1)*w;let by=Math.floor(Math.random()*(WINDOW_HEIGHT/20-1)+1)*w;
+
+let dir="up";
+
+let s1x = 9999; let s1y = 9999;
+let s2x = 9999; let s2y = 9999;
+let s3x = 9999; let s3y = 9999;
+let s4x = 9999; let s4y = 9999;
+let s5x = 9999; let s5y = 9999;
+let s6x = 9999; let s6y = 9999;
+let s7x = 9999; let s7y = 9999;
+let s8x = 9999; let s8y = 9999;
+let s9x = 9999; let s9y = 9999;
+let s10x = 9999; let s10y = 9999;
+let s11x = 9999; let s11y = 9999;
+let s12x = 9999; let s12y = 9999;
+let s13x = 9999; let s13y = 9999;
+let s14x = 9999; let s14y = 9999;
+let s15x = 9999; let s15y = 9999;
+let s16x = 9999; let s16y = 9999;
+let s17x = 9999; let s17y = 9999;
+let s18x = 9999; let s18y = 9999;
+let s19x = 9999; let s19y = 9999;
+let s20x = 9999; let s20y = 9999;
+let s21x = 9999; let s21y = 9999;
+let s22x = 9999; let s22y = 9999;
+let s23x = 9999; let s23y = 9999;
+let s24x = 9999; let s24y = 9999;
+let s25x = 9999; let s25y = 9999;
+let s26x = 9999; let s26y = 9999;
+let s27x = 9999; let s27y = 9999;
+let s28x = 9999; let s28y = 9999;
+let s29x = 9999; let s29y = 9999;
+let s30x = 9999; let s30y = 9999;
+let s31x = 9999; let s31y = 9999;
+let s32x = 9999; let s32y = 9999;
+let s33x = 9999; let s33y = 9999;
+let s34x = 9999; let s34y = 9999;
+let s35x = 9999; let s35y = 9999;
+let s36x = 9999; let s36y = 9999;
+let s37x = 9999; let s37y = 9999;
+let s38x = 9999; let s38y = 9999;
+let s39x = 9999; let s39y = 9999;
+let s40x = 9999; let s40y = 9999;
+
+let valid=1;
+let turn=1;
+
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+function game_loop() {
+    
+    if (!running) return;
+
+    /* ===== UPDATE ===== */
+    if (keys["ArrowLeft"]) dir="left"
+    if (keys["ArrowRight"]) dir="right"
+    if (keys["ArrowUp"]) dir="up"
+    if (keys["ArrowDown"]) dir="down"
+
+    /* ===== RENDER ===== */
+
+    //clear scren
+    ctx.fillStyle="#202020"
+    ctx.fillRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
+
+    ctx.fillStyle="#ff0000"
+    ctx.fillRect(bx, by, w, h);
+
+    ctx.fillStyle="#00ff00"
+    ctx.fillRect(px, py, w, h);
+    ctx.fillRect(s1x, s1y, w, h);
+    ctx.fillRect(s2x, s2y, w, h);
+    ctx.fillRect(s3x, s3y, w, h);
+    ctx.fillRect(s4x, s4y, w, h);
+    ctx.fillRect(s5x, s5y, w, h);
+    ctx.fillRect(s6x, s6y, w, h);
+    ctx.fillRect(s7x, s7y, w, h);
+    ctx.fillRect(s8x, s8y, w, h);
+    ctx.fillRect(s9x, s9y, w, h);
+    ctx.fillRect(s10x, s10y, w, h);
+    ctx.fillRect(s11x, s11y, w, h);
+    ctx.fillRect(s12x, s12y, w, h);
+    ctx.fillRect(s13x, s13y, w, h);
+    ctx.fillRect(s14x, s14y, w, h);
+    ctx.fillRect(s15x, s15y, w, h);
+    ctx.fillRect(s16x, s16y, w, h);
+    ctx.fillRect(s17x, s17y, w, h);
+    ctx.fillRect(s18x, s18y, w, h);
+    ctx.fillRect(s19x, s19y, w, h);
+    ctx.fillRect(s20x, s20y, w, h);
+    ctx.fillRect(s21x, s21y, w, h);
+    ctx.fillRect(s22x, s22y, w, h);
+    ctx.fillRect(s23x, s23y, w, h);
+    ctx.fillRect(s24x, s24y, w, h);
+    ctx.fillRect(s25x, s25y, w, h);
+    ctx.fillRect(s26x, s26y, w, h);
+    ctx.fillRect(s27x, s27y, w, h);
+    ctx.fillRect(s28x, s28y, w, h);
+    ctx.fillRect(s29x, s29y, w, h);
+    ctx.fillRect(s30x, s30y, w, h);
+    ctx.fillRect(s31x, s31y, w, h);
+    ctx.fillRect(s32x, s32y, w, h);
+    ctx.fillRect(s33x, s33y, w, h);
+    ctx.fillRect(s34x, s34y, w, h);
+    ctx.fillRect(s35x, s35y, w, h);
+    ctx.fillRect(s36x, s36y, w, h);
+    ctx.fillRect(s37x, s37y, w, h);
+    ctx.fillRect(s38x, s38y, w, h);
+    ctx.fillRect(s39x, s39y, w, h);
+    ctx.fillRect(s40x, s40y, w, h);
+
+
+
+    
+
+    if(px===bx&py===by){bx=Math.floor(Math.random()*19+1)*w;by=Math.floor(Math.random()*19+1)*w;valid=valid+1;}
+
+    if(valid >= 1 && turn === 1) { s1x = px; s1y = py; turn = turn + 1; }
+    else if(valid >= 2 && turn === 2) { s2x = px; s2y = py; turn = turn + 1; }
+    else if(valid >= 3 && turn === 3) { s3x = px; s3y = py; turn = turn + 1; }
+    else if(valid >= 4 && turn === 4) { s4x = px; s4y = py; turn = turn + 1; }
+    else if(valid >= 5 && turn === 5) { s5x = px; s5y = py; turn = turn + 1; }
+    else if(valid >= 6 && turn === 6) { s6x = px; s6y = py; turn = turn + 1; }
+    else if(valid >= 7 && turn === 7) { s7x = px; s7y = py; turn = turn + 1; }
+    else if(valid >= 8 && turn === 8) { s8x = px; s8y = py; turn = turn + 1; }
+    else if(valid >= 9 && turn === 9) { s9x = px; s9y = py; turn = turn + 1; }
+    else if(valid >= 10 && turn === 10) { s10x = px; s10y = py; turn = turn + 1; }
+    else if(valid >= 11 && turn === 11) { s11x = px; s11y = py; turn = turn + 1; }
+    else if(valid >= 12 && turn === 12) { s12x = px; s12y = py; turn = turn + 1; }
+    else if(valid >= 13 && turn === 13) { s13x = px; s13y = py; turn = turn + 1; }
+    else if(valid >= 14 && turn === 14) { s14x = px; s14y = py; turn = turn + 1; }
+    else if(valid >= 15 && turn === 15) { s15x = px; s15y = py; turn = turn + 1; }
+    else if(valid >= 16 && turn === 16) { s16x = px; s16y = py; turn = turn + 1; }
+    else if(valid >= 17 && turn === 17) { s17x = px; s17y = py; turn = turn + 1; }
+    else if(valid >= 18 && turn === 18) { s18x = px; s18y = py; turn = turn + 1; }
+    else if(valid >= 19 && turn === 19) { s19x = px; s19y = py; turn = turn + 1; }
+    else if(valid >= 20 && turn === 20) { s20x = px; s20y = py; turn = turn + 1; }
+    else if(valid >= 21 && turn === 21) { s21x = px; s21y = py; turn = turn + 1; }
+    else if(valid >= 22 && turn === 22) { s22x = px; s22y = py; turn = turn + 1; }
+    else if(valid >= 23 && turn === 23) { s23x = px; s23y = py; turn = turn + 1; }
+    else if(valid >= 24 && turn === 24) { s24x = px; s24y = py; turn = turn + 1; }
+    else if(valid >= 25 && turn === 25) { s25x = px; s25y = py; turn = turn + 1; }
+    else if(valid >= 26 && turn === 26) { s26x = px; s26y = py; turn = turn + 1; }
+    else if(valid >= 27 && turn === 27) { s27x = px; s27y = py; turn = turn + 1; }
+    else if(valid >= 28 && turn === 28) { s28x = px; s28y = py; turn = turn + 1; }
+    else if(valid >= 29 && turn === 29) { s29x = px; s29y = py; turn = turn + 1; }
+    else if(valid >= 30 && turn === 30) { s30x = px; s30y = py; turn = turn + 1; }
+    else if(valid >= 31 && turn === 31) { s31x = px; s31y = py; turn = turn + 1; }
+    else if(valid >= 32 && turn === 32) { s32x = px; s32y = py; turn = turn + 1; }
+    else if(valid >= 33 && turn === 33) { s33x = px; s33y = py; turn = turn + 1; }
+    else if(valid >= 34 && turn === 34) { s34x = px; s34y = py; turn = turn + 1; }
+    else if(valid >= 35 && turn === 35) { s35x = px; s35y = py; turn = turn + 1; }
+    else if(valid >= 36 && turn === 36) { s36x = px; s36y = py; turn = turn + 1; }
+    else if(valid >= 37 && turn === 37) { s37x = px; s37y = py; turn = turn + 1; }
+    else if(valid >= 38 && turn === 38) { s38x = px; s38y = py; turn = turn + 1; }
+    else if(valid >= 39 && turn === 39) { s39x = px; s39y = py; turn = turn + 1; }
+    else if(valid >= 40 && turn === 40) { s40x = px; s40y = py; turn = turn + 1; }
+    else{s1x=px;s1y=py;turn=1;turn=turn+1}
+
+
+    if(dir==="down"){py=py+h}
+    if(dir==="up"){py=py-h}
+    if(dir==="left"){px=px-w}
+    if(dir==="right"){px=px+w}
+
+if(
+(px === s1x && py === s1y) ||
+(px === s2x && py === s2y) ||
+(px === s3x && py === s3y) ||
+(px === s4x && py === s4y) ||
+(px === s5x && py === s5y) ||
+(px === s6x && py === s6y) ||
+(px === s7x && py === s7y) ||
+(px === s8x && py === s8y) ||
+(px === s9x && py === s9y) ||
+(px === s10x && py === s10y) ||
+(px === s11x && py === s11y) ||
+(px === s12x && py === s12y) ||
+(px === s13x && py === s13y) ||
+(px === s14x && py === s14y) ||
+(px === s15x && py === s15y) ||
+(px === s16x && py === s16y) ||
+(px === s17x && py === s17y) ||
+(px === s18x && py === s18y) ||
+(px === s19x && py === s19y) ||
+(px === s20x && py === s20y) ||
+(px === s21x && py === s21y) ||
+(px === s22x && py === s22y) ||
+(px === s23x && py === s23y) ||
+(px === s24x && py === s24y) ||
+(px === s25x && py === s25y) ||
+(px === s26x && py === s26y) ||
+(px === s27x && py === s27y) ||
+(px === s28x && py === s28y) ||
+(px === s29x && py === s29y) ||
+(px === s30x && py === s30y) ||
+(px === s31x && py === s31y) ||
+(px === s32x && py === s32y) ||
+(px === s33x && py === s33y) ||
+(px === s34x && py === s34y) ||
+(px === s35x && py === s35y) ||
+(px === s36x && py === s36y) ||
+(px === s37x && py === s37y) ||
+(px === s38x && py === s38y) ||
+(px === s39x && py === s39y) ||
+(px === s40x && py === s40y) ||
+(px > WINDOW_WIDTH) ||
+(px < 0) ||
+(py > WINDOW_HEIGHT) ||
+(py < 0)
+){
+s1x = 9999; s1y = 9999;
+s2x = 9999; s2y = 9999;
+s3x = 9999; s3y = 9999;
+s4x = 9999; s4y = 9999;
+s5x = 9999; s5y = 9999;
+s6x = 9999; s6y = 9999;
+s7x = 9999; s7y = 9999;
+s8x = 9999; s8y = 9999;
+s9x = 9999; s9y = 9999;
+s10x = 9999; s10y = 9999;
+s11x = 9999; s11y = 9999;
+s12x = 9999; s12y = 9999;
+s13x = 9999; s13y = 9999;
+s14x = 9999; s14y = 9999;
+s15x = 9999; s15y = 9999;
+s16x = 9999; s16y = 9999;
+s17x = 9999; s17y = 9999;
+s18x = 9999; s18y = 9999;
+s19x = 9999; s19y = 9999;
+s20x = 9999; s20y = 9999;
+s21x = 9999; s21y = 9999;
+s22x = 9999; s22y = 9999;
+s23x = 9999; s23y = 9999;
+s24x = 9999; s24y = 9999;
+s25x = 9999; s25y = 9999;
+s26x = 9999; s26y = 9999;
+s27x = 9999; s27y = 9999;
+s28x = 9999; s28y = 9999;
+s29x = 9999; s29y = 9999;
+s30x = 9999; s30y = 9999;
+s31x = 9999; s31y = 9999;
+s32x = 9999; s32y = 9999;
+s33x = 9999; s33y = 9999;
+s34x = 9999; s34y = 9999;
+s35x = 9999; s35y = 9999;
+s36x = 9999; s36y = 9999;
+s37x = 9999; s37y = 9999;
+s38x = 9999; s38y = 9999;
+s39x = 9999; s39y = 9999;
+s40x = 9999; s40y = 9999;
+px=200; py=200;
+bx=Math.floor(Math.random()*19+1)*w;by=Math.floor(Math.random()*19+1)*w;
+dir="up";
+valid=1;
+turn=1;
 }
 
-function rotateRight() {
-    if (!canTurn) return;
-    var map = { up: "right", right: "down", down: "left", left: "up" };
-    nextFacing = map[facing];
-    canTurn = false;
+
+    setTimeout(() => {
+        requestAnimationFrame(game_loop);
+    }, 100);
 }
 
-/* ===== START ===== */
-function startGame() {
-    resetGame();
-    menu = 0;
-    loop = setInterval(tick, SPEED);
-}
-
-drawMenu();
+game_loop();
 </script>
-
 </body>
 </html>
