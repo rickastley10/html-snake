@@ -8,10 +8,14 @@
         margin: 0;
         background: #111;
         overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
     }
     canvas {
         display: block;
-        margin: auto;
         background: black;
         touch-action: none; /* important for mobile touch */
     }
@@ -39,6 +43,24 @@ canvas.height = WINDOW_HEIGHT;
 const ctx = canvas.getContext("2d");
 
 let running = true;
+
+/* ============================================================
+   SCALING FUNCTION
+   ============================================================ */
+function resizeCanvas() {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const scale = Math.min(windowWidth / WINDOW_WIDTH, windowHeight / WINDOW_HEIGHT);
+    
+    canvas.style.width = (WINDOW_WIDTH * scale) + 'px';
+    canvas.style.height = (WINDOW_HEIGHT * scale) + 'px';
+}
+
+// Initial resize
+resizeCanvas();
+
+// Resize on window resize
+window.addEventListener("resize", resizeCanvas);
 
 /* ============================================================
    INPUT
@@ -75,8 +97,12 @@ function handleInput(e) {
     const rect = canvas.getBoundingClientRect();
     const x = clientX - rect.left;
     
+    // Calculate the actual game coordinate considering the scale
+    const scale = rect.width / WINDOW_WIDTH;
+    const gameX = x / scale;
+    
     // Left half
-    if (x < WINDOW_WIDTH / 2) {
+    if (gameX < WINDOW_WIDTH / 2) {
         if(dir==="up"){dir="left"}
         else if(dir==="left"){dir="down"}
         else if(dir==="down"){dir="right"}
@@ -168,17 +194,21 @@ function game_loop() {
     if (keys["ArrowUp"]) dir="up"
     if (keys["ArrowDown"]) dir="down"
 
+    if (keys["a"]) dir="left"
+    if (keys["d"]) dir="right"
+    if (keys["w"]) dir="up"
+    if (keys["s"]) dir="down"
+
     /* ===== RENDER ===== */
 
     //clear scren
     ctx.fillStyle="#202020"
     ctx.fillRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
 
-    ctx.fillStyle="#ff0000"
-    ctx.fillRect(bx, by, w, h);
 
-    ctx.fillStyle="#00ff00"
+    ctx.fillStyle="#00aa00"
     ctx.fillRect(px, py, w, h);
+    ctx.fillStyle="#00ff00"
     ctx.fillRect(s1x, s1y, w, h);
     ctx.fillRect(s2x, s2y, w, h);
     ctx.fillRect(s3x, s3y, w, h);
@@ -219,7 +249,9 @@ function game_loop() {
     ctx.fillRect(s38x, s38y, w, h);
     ctx.fillRect(s39x, s39y, w, h);
     ctx.fillRect(s40x, s40y, w, h);
-
+    
+    ctx.fillStyle="#ff0000"
+    ctx.fillRect(bx, by, w, h);
 
 
     
