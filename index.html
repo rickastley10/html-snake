@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>meteor</title>
+<title>snake</title>
 <style>
     body {
         margin: 0;
@@ -106,7 +106,7 @@ canvas.addEventListener("mousedown", handleInput);
 
 
 let px=WINDOW_WIDTH/2; let py=WINDOW_HEIGHT/2;
-let bx=Math.floor(Math.random()*(WINDOW_WIDTH/20-1)+1)*w;let by=Math.floor(Math.random()*(WINDOW_HEIGHT/20-1)+1)*w;
+let bx=Math.floor(Math.random()*(WINDOW_WIDTH/20-1)+1)*w;let by=200
 
 let dir="up";
 
@@ -273,7 +273,18 @@ function game_loop() {
     if(dir==="up"){py=py-h}
     if(dir==="left"){px=px-w}
     if(dir==="right"){px=px+w}
-
+if (px>=800){
+    px=0
+}
+if (py>=800){
+    py=0
+}
+if (px<0){
+    px=800
+}
+if (py<0){
+    py=800
+}
 if(
 (px === s1x && py === s1y) ||
 (px === s2x && py === s2y) ||
@@ -314,11 +325,7 @@ if(
 (px === s37x && py === s37y) ||
 (px === s38x && py === s38y) ||
 (px === s39x && py === s39y) ||
-(px === s40x && py === s40y) ||
-(px > WINDOW_WIDTH) ||
-(px < 0) ||
-(py > WINDOW_HEIGHT) ||
-(py < 0)
+(px === s40x && py === s40y)
 ){
 s1x = 9999; s1y = 9999;
 s2x = 9999; s2y = 9999;
