@@ -195,6 +195,7 @@ let s40x = 9999; let s40y = 9999;
 let valid=1;
 let turn=1;
 
+let score=0;
 
 /* ============================================================
    MAIN LOOP
@@ -260,7 +261,9 @@ function game_loop() {
     ctx.font = "20px Arial";
     ctx.fillStyle="#000000"
     ctx.fillText("||", WINDOW_WIDTH/2+1, WINDOW_HEIGHT/8+1)
-
+	
+	
+	
 
 
 
@@ -314,9 +317,12 @@ function game_loop() {
     ctx.font = "20px Arial";
     ctx.fillStyle="#FF0000"
     ctx.fillText("||", WINDOW_WIDTH/2, WINDOW_HEIGHT/8)
+	
+	ctx.font = "20px Arial";
+    ctx.fillStyle="#aa0000"
+    ctx.fillText("score: "+score, 10, 20)
 
-
-    if(px===bx&py===by){bx=Math.floor(Math.random()*18+1)*w;by=Math.floor(Math.random()*18+1)*w;valid=valid+1;}
+    if(px===bx&py===by){bx=Math.floor(Math.random()*18+1)*w;by=Math.floor(Math.random()*18+1)*w;valid=valid+1;score=score+1;}
 
     if(valid >= 1 && turn === 1) { s1x = px; s1y = py; turn = turn + 1; }
     else if(valid >= 2 && turn === 2) { s2x = px; s2y = py; turn = turn + 1; }
@@ -464,6 +470,7 @@ bx=Math.floor(Math.random()*19+1)*w;by=Math.floor(Math.random()*19+1)*w;
 dir="up";
 valid=1;
 turn=1;
+score=0;
 }
 
     }
