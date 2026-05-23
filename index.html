@@ -218,6 +218,8 @@ function game_loop() {
     
     if (menu===1){
         if (keys["p"]) menu=0
+        if (keys["a"]) timex=timex/2
+        if (keys["d"]) timex=timex*2
 
         ctx.font = "20px Arial";
         ctx.fillStyle="#000000"
@@ -235,11 +237,11 @@ function game_loop() {
 
         ctx.font = "10px Arial";
         ctx.fillStyle="#FF0000"
-        ctx.fillText("x0,5 speed", 100, WINDOW_HEIGHT/2)
+        ctx.fillText("x2 speed", 100, WINDOW_HEIGHT/2)
 
         ctx.font = "10px Arial";
         ctx.fillStyle="#FF0000"
-        ctx.fillText("x2 speed", 700, WINDOW_HEIGHT/2)
+        ctx.fillText("x0,5 speed", 700, WINDOW_HEIGHT/2)
     }
     else if (menu===0){
     /* ===== UPDATE ===== */
