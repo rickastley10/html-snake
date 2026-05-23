@@ -220,6 +220,9 @@ function game_loop() {
         if (keys["p"]) menu=0
         if (keys["a"]) timex=timex/2
         if (keys["d"]) timex=timex*2
+		if (keys["ArrowLeft"]){timex=timex/2}
+	    if (keys["ArrowRight"]){timex=timex*2}
+
 
         ctx.font = "20px Arial";
         ctx.fillStyle="#000000"
