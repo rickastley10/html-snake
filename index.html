@@ -116,17 +116,27 @@ function handleInput(e) {
     }
     // Left half
     else if (gameX < WINDOW_WIDTH / 2) {
+      if(menu===0){
         if(dir==="up"){dir="left"}
         else if(dir==="left"){dir="down"}
         else if(dir==="down"){dir="right"}
         else if(dir==="right"){dir="up"}
+      }
+      else{
+        timex=timex/2
+      }
     }
     // Right half
     else {
+      if(menu===0){
         if(dir==="up"){dir="right"}
         else if(dir==="right"){dir="down"}
         else if(dir==="down"){dir="left"}
         else if(dir==="left"){dir="up"}
+      }
+      else{
+        timex=timex*2
+      }
     }
 }
 
@@ -148,6 +158,8 @@ let px=WINDOW_WIDTH/2; let py=WINDOW_HEIGHT/2;
 let bx=200;let by=200
 
 let dir="up";
+
+let timex=100
 
 let menu=0
 
@@ -218,6 +230,16 @@ function game_loop() {
         ctx.font = "40px Arial";
         ctx.fillStyle="#FF0000"
         ctx.fillText("snake game", WINDOW_WIDTH/2-w*3, WINDOW_HEIGHT/2)
+
+
+
+        ctx.font = "10px Arial";
+        ctx.fillStyle="#FF0000"
+        ctx.fillText("x0,5 speed", 100, WINDOW_HEIGHT/2)
+
+        ctx.font = "10px Arial";
+        ctx.fillStyle="#FF0000"
+        ctx.fillText("x2 speed", 700, WINDOW_HEIGHT/2)
     }
     else if (menu===0){
     /* ===== UPDATE ===== */
@@ -476,7 +498,7 @@ score=0;
     }
     setTimeout(() => {
         requestAnimationFrame(game_loop);
-    }, 100);
+    }, timex);
 }
 
 game_loop();
