@@ -85,7 +85,7 @@
     ">
         down
     </button>
-
+<h1></h1>
     <button onclick="
     if(menu===1){
         menu=0
@@ -201,17 +201,53 @@ function game_loop() {
 
             
             if (keys["w"]){
-                di = 1
+                if(di!==2){
+                    di = 1
+                }
+                
             }
             if (keys["s"]){
-                di = 2
+                if(di!==1){
+                    di = 2
+                }
             }
             if (keys["d"]){
-                di = 4
+                if(di!==3){
+                    di = 4
+                }
             }
             if (keys["a"]){
-                di = 3
+                if(di!==4){
+                    di = 3
+                }
             }
+
+
+
+            if (keys["ArrowUp"]){
+                if(di!==2){
+                    di = 1
+                }
+                
+            }
+            if (keys["ArrowDown"]){
+                if(di!==1){
+                    di = 2
+                }
+            }
+            if (keys["ArrowRight"]){
+                if(di!==3){
+                    di = 4
+                }
+            }
+            if (keys["ArrowLeft"]){
+                if(di!==4){
+                    di = 3
+                }
+            }
+
+
+
             if (keys["p"]){
                 menu=1
             }
@@ -240,28 +276,6 @@ function game_loop() {
             else{
                 seg.pop()
             }
-            seg.reverse()
-            seg.push({
-                "x":hx,
-                "y":hy
-            })
-            seg.reverse()
-
-
-            if(hx>400){
-                hx=0
-            }
-            if(hx<0){
-                hx=400
-            }
-            if(hy>400){
-                hy=0
-            }
-            if(hy<0){
-                hy=400
-            }
-
-
             for(let i of seg){
                 if(i["x"]===hx && i["y"]===hy){
                     seg = [];
@@ -283,6 +297,30 @@ function game_loop() {
                     score=0
                 }
             }
+            seg.reverse()
+            seg.push({
+                "x":hx,
+                "y":hy
+            })
+            seg.reverse()
+            
+
+
+            if(hx>400){
+                hx=0
+            }
+            if(hx<0){
+                hx=400
+            }
+            if(hy>400){
+                hy=0
+            }
+            if(hy<0){
+                hy=400
+            }
+
+
+            
 
             for(let i of seg){
                 ctx.fillStyle="#00ff00"
@@ -305,6 +343,7 @@ function game_loop() {
                 ctx.fillStyle="#00ff00"
                 ctx.fillRect(i["x"], i["y"], w, h)
             }
+            
             ctx.fillStyle="#ff0000"
             ctx.fillRect(bx, by, w, h)
 
