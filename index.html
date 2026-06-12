@@ -201,7 +201,19 @@ function handleInput(e) {
     const scaleY = WINDOW_HEIGHT / rect.height;
     const canvasX = x * scaleX;
     const canvasY = y * scaleY;
-
+    if(canvasX>200){
+        if(di === 1){di=4}
+        else if(di === 4){di=2}
+        else if(di === 2){di=3}
+        else if(di === 3){di=1}
+    }
+    if(canvasX<200){
+        if(di === 4){di=1}
+        else if(di === 2){di=4}
+        else if(di === 3){di=2}
+        else if(di === 1){di=3}
+    }
+    
 
 }
 
