@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0042)https://rickastley10.github.io/html-snake/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>snake</title>
 <style>
@@ -98,7 +98,7 @@
 <body>
 
 <div class="game-container">
-    <canvas id="game"></canvas>
+    <canvas id="game" width="400" height="400"></canvas>
     <div class="controls">
         <button onclick="
         if(di!==2){
@@ -354,11 +354,34 @@ function game_loop() {
             if(di===4){
                 hx=hx+w
             }
-            
+            x=1
+            z=0
+            y=0
+            attempts = 0
             if (hx === bx && hy ===by){
+                while (x===1 && attempts < 1000){
+                attempts++
+                
                 bx = Math.floor(Math.random()*20)*20
                 by = Math.floor(Math.random()*20)*20
-
+                
+                z = 0
+                y = 0 
+                
+                for (let i of seg){
+                    z++
+                    if(i["x"] !== bx && i["y"] !== by){  
+                        y++
+                    }
+                }
+                
+                if(z === y){
+                    
+                    x = 0
+                }
+                
+                
+            }
                 score=score+1
             }
             else{
@@ -577,5 +600,6 @@ function game_loop() {
 
 game_loop();
 </script>
-</body>
-</html>
+
+
+</body></html>
