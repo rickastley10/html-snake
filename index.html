@@ -99,7 +99,7 @@
 
 <div class="game-container">
     <canvas id="game" width="400" height="400"></canvas>
-    <div class="controls">
+    <div class="controls" id="buttonControls">
         <button onclick="
         if(di!==2){
             di=1
@@ -224,6 +224,16 @@ function handleInput(e) {
         time=time*2
     }
 
+    else if(canvasX <= 120 && canvasY <= 340 && canvasY >= 320 && menu===1){
+        if(buttons===1){
+            buttons=0
+        }
+        else{
+            buttons=1;
+            
+        }
+    }
+
     else if(canvasX>200){
         if(di === 1){di=4}
         else if(di === 4){di=2}
@@ -268,6 +278,7 @@ let score=0
 let style=1
 
 let time=100
+buttons=0
 
 
 /* ============================================================
@@ -590,8 +601,18 @@ function game_loop() {
             ctx.fillText("x 2 speed",320, 320)
             ctx.fillStyle="#FFFFFF"
             ctx.fillText("x 0.5 speed",320, 360)
+
+
+            ctx.fillStyle="#FFFFFF"
+            ctx.fillText("toggle buttons",20, 340)
         }
         
+
+
+    const buttonContainer = document.getElementById("buttonControls");
+    if (buttonContainer) {
+        buttonContainer.style.display = buttons === 1 ? "flex" : "none";
+    }
 
     setTimeout(() => {
         requestAnimationFrame(game_loop);
