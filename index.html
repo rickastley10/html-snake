@@ -321,6 +321,30 @@ function game_loop() {
 
 
 
+            if (keys["i"]){
+                if(di!==2){
+                    di = 1
+                }
+                
+            }
+            if (keys["k"]){
+                if(di!==1){
+                    di = 2
+                }
+            }
+            if (keys["l"]){
+                if(di!==3){
+                    di = 4
+                }
+            }
+            if (keys["j"]){
+                if(di!==4){
+                    di = 3
+                }
+            }
+
+
+
             if (keys["ArrowUp"]){
                 if(di!==2){
                     di = 1
